@@ -1,3 +1,8 @@
+**Piscine Python**
+
+## Description
+This project consists in a 42 mini piscine, to learn more about Python and Object Oriented Programming, having 11 Modules with different topics about Python.
+
 | Project Name | Key Concepts | Grade |
 |:---:|:---:|:---:|
 | [**Python Module 00**](https://github.com/sylvzzz/42_Piscine_Python/tree/main/PyM0) | Basics of Python Syntax| 100 ✔️ |
