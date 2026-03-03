@@ -3,9 +3,9 @@ if __name__ == "__main__":
     plant_height = 25
     plant_age = 30
 
-    print(f"=== Welcome to My Garden ===")
+    print("=== Welcome to My Garden ===")
     print(f"Plant: {plant_name}")
     print(f"Height: {plant_height} cm")
     print(f"Age: {plant_age} days")
     print()
-    print(f"=== End of Program ===")
+    print("=== End of Program ===")

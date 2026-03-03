@@ -23,9 +23,9 @@ if __name__ == "__main__":
 
     initial_height = rose.height
 
-    for _ in range(7):
-            rose.grow()
-            rose.age_one_day()
+    for i in range(6):
+        rose.grow()
+        rose.age_one_day()
 
     print("=== Day 7 ===")
     print(rose.get_info())

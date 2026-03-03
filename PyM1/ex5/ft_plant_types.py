@@ -1,5 +1,5 @@
 class Plant:
-    def __init__(self, name: str, height: int, age: int):
+    def __init__(self, name: str, height: int, age: int) -> None:
         self.name = name
         self.height = height
         self.age = age
@@ -28,7 +28,8 @@ class Tree(Plant):
         self.produce_shade()
 
     def produce_shade(self) -> None:
-        print(f'{self.name} provides {self.trunk_diameter} meters of shade')
+        shade_area = (self.height * self.trunk_diameter * 3.14) / 1000
+        print(f'{self.name} provides {shade_area:.0f} square meters of shade')
 
 
 class Vegetable(Plant):
@@ -37,7 +38,7 @@ class Vegetable(Plant):
         super().__init__(name, height, age)
         self.harvest_season = harvest_season
         self.nutritional_value = nutritional_value
-        print(f'{self.name} (Flower): {self.height}cm, {self.age} days, '
+        print(f'{self.name} (Vegetable): {self.height}cm, {self.age} days, '
               f'{self.harvest_season} harvest')
         self.bloom()
 
@@ -46,17 +47,18 @@ class Vegetable(Plant):
 
 
 def main():
-    Flower("rose", 25, 30, "white")
+    print("=== Garden Plant Types ===\n")
+    Flower("Rose", 25, 30, "white")
     print()
-    Flower("papoila", 10, 25, "red")
+    Flower("Papoila", 10, 25, "red")
     print()
-    Tree("oak", 500, 1825, 50)
+    Tree("Oak", 500, 1825, 50)
     print()
-    Tree("carvalho", 800, 2825, 90)
+    Tree("Carvalho", 800, 2825, 90)
     print()
-    Vegetable("tomato", 40, 10, "spring", "vitamin C")
+    Vegetable("Tomato", 40, 10, "spring", "vitamin C")
     print()
-    Vegetable("carrot", 30, 15, "summer", "fiber")
+    Vegetable("Carrot", 30, 15, "summer", "fiber")
     print()
 
 

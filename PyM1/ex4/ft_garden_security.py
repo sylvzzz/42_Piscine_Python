@@ -1,23 +1,22 @@
 class SecurePlant:
-    def __init__(self, name: str, height: int, age: int):
+    def __init__(self, name: str, height: int, age: int) -> None:
         self._name = name
         self._height = height
         self._age = age
 
-    def set_height(self, height: int):
+    def set_height(self, height: int) -> None:
         if (height < 0):
+            print()
             print(f"Invalid opeation attempted: height {height}cm [REJECTED]")
-            print("Security: Negative height rejected")
-            return False
+            print("Security: Negative height rejected\n")
         else:
             self._height = height
             print(f"Height updated: {self.get_height()} [OK]")
 
-    def set_age(self, age: int):
+    def set_age(self, age: int) -> None:
         if (age < 0):
             print(f"Invalid opeation attempted: age {age}days [REJECTED]")
             print("Security: Negative age rejected")
-            return False
         else:
             self._age = age
             print(f"Age updated: {self.get_age()} [OK]")
@@ -38,6 +37,7 @@ def main():
     rose.set_height(75)
     height = rose.get_height()
     age = rose.get_age()
+    rose.set_height(-5)
     print(f"Current plant: {rose._name} ({height}cm, {age}days)")
 
 
