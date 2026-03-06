@@ -1,4 +1,4 @@
-**Piscine Python**
+<h1>Piscine Python</h1>
 
 ## Description
 This project consists in a 42 mini piscine, to learn more about Python and Object Oriented Programming, having 11 Modules with different topics about Python.
