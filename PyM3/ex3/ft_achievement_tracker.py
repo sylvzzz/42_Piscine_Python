@@ -1,166 +1,93 @@
-import sys
-
-
-def get_inventory(args: list) -> dict:
-    inventory = {}
-
-    for arg in args:
-        try:
-            parts = arg.split(":")
-            if len(parts) != 2:
-                raise ValueError(f"Invalid format: {arg}")
-
-            item_name = parts[0].strip()
-            quantity = int(parts[1].strip())
-
-            inventory[item_name] = quantity
-
-        except (ValueError, IndexError) as Error:
-            print(f"Error parsing '{arg}': {Error}")
-            continue
-
-    return inventory
-
-
-def calculate_total_items(inventory: dict) -> int:
-    total = 0
-    for quantity in inventory.values():
-        total += quantity
-    return total
-
-
-def get_most_common(inventory: dict) -> tuple:
-    if not inventory:
-        return None, 0
-
-    max_item = None
-    max_qty = -1
-
-    for item, qty in inventory.items():
-        if qty > max_qty:
-            max_qty = qty
-            max_item = item
-
-    return max_item, max_qty
-
-
-def get_least_common(inventory: dict) -> tuple:
-    if not inventory:
-        return None, 0
-
-    items = list(inventory.items())
-    min_item, min_qty = items[0]
-
-    for item, qty in inventory.items():
-        if qty < min_qty:
-            min_qty = qty
-            min_item = item
-
-    return min_item, min_qty
-
-
-def categorize_achievement(inventory: dict) -> dict:
-    categories = {
-        "Moderate": {},
-        "Scarce": {}
+def create_players() -> dict:
+    players = {
+        "alice": {"first_kill", "level_10", "treasure_hunter", "speed_demon"},
+        "bob": {"first_kill", "level_10", "boss_slayer", "collector"},
+        "charlie": {
+            "level_10", "treasure_hunter", "boss_slayer",
+            "speed_demon", "perfectionist"
+        }
     }
-
-    for item_name, quantity in inventory.items():
-        if quantity > 4:
-            categories["Moderate"][item_name] = quantity
-        else:
-            categories["Scarce"][item_name] = quantity
-
-    return categories
+    return players
 
 
-def restock_suggestions(inventory: dict) -> list:
-    return [item for item, qty in inventory.items() if qty <= 1]
+def get_all_achievements(players: dict) -> set:
+    all_achievements = set()
+    for achievements in players.values():
+        all_achievements = all_achievements.union(achievements)
+    return all_achievements
 
 
-def display_inventory(inventory: dict) -> None:
-    if not inventory:
-        print("Inventory is empty!")
-        return
+def get_common_achievements(players: dict) -> set:
+    if not players:
+        return set()
 
-    print("=== Inventory System Analysis ===")
+    player_list = list(players.values())
+    common = player_list[0]
 
-    total = calculate_total_items(inventory)
-    unique = len(inventory)
+    for achievements in player_list[1:]:
+        common = common.intersection(achievements)
 
-    print(f"Total items in inventory: {total}")
-    print(f"Unique item types: {unique}")
-
-    print("\n=== Current Inventory ===")
-
-    items_list = list(inventory.items())
-    n = len(items_list)
-
-    i = 0
-    while i < n:
-        j = 0
-        while j < n - i - 1:
-            if items_list[j][1] < items_list[j + 1][1]:
-                temp = items_list[j]
-                items_list[j] = items_list[j + 1]
-                items_list[j + 1] = temp
-            j += 1
-        i += 1
-
-    for item_name, quantity in items_list:
-        percentage = (quantity / total) * 100
-        unit_word = "unit" if quantity == 1 else "units"
-        print(f"{item_name}: {quantity} {unit_word} ({percentage:.1f}%)")
-
-    print("\n=== Inventory Statistics ===")
-    most_item, most_qty = get_most_common(inventory)
-    least_item, least_qty = get_least_common(inventory)
-
-    print(f"Most abundant: {most_item} "
-          f"({most_qty} unit{'s' if most_qty != 1 else ''})")
-
-    print(f"Least abundant: {least_item} "
-          f"({least_qty} unit{'s' if least_qty != 1 else ''})")
-
-    print("\n=== Item Categories ===")
-    categories = categorize_achievement(inventory)
-
-    for category, items in categories.items():
-        if items:
-            print(f"{category}: {items}")
-
-    print("\n=== Management Suggestions ===")
-    restock = restock_suggestions(inventory)
-    print(f"Restock needed: {restock}")
-
-    print("\n=== Dictionary Properties Demo ===")
-    print(f"Dictionary keys: {list(inventory.keys())}")
-    print(f"Dictionary values: {list(inventory.values())}")
-
-    sample_item = "sword"
-    sample_exists = inventory.get(sample_item) is not None
-    print(f"Sample lookup - '{sample_item}' in inventory: "
-          f"{sample_exists}")
-
-    new_shipment = {"relic": 1, "gold_dust": 10}
-    inventory.update(new_shipment)
+    return common
 
 
-def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python3 ft_inventory_system.py item:qty "
-              "item:qty ...")
-        print("Example: python3 ft_inventory_system.py sword:1 "
-              "potion:5 shield:2 armor:3 helmet:1")
-        return
+def get_rare_achievements(players: dict, rarity_threshold: int = 1) -> set:
+    all_achievements = get_all_achievements(players)
+    rare = set()
+    for achievement in all_achievements:
+        count = sum(
+            1 for achievements in players.values()
+            if achievement in achievements
+        )
+        if count <= rarity_threshold:
+            rare.add(achievement)
 
-    inventory = get_inventory(sys.argv[1:])
+    return rare
 
-    if not inventory:
-        print("No valid items parsed from arguments.")
-        return
-    display_inventory(inventory)
+
+def get_player_comparison(players: dict, player1: str,
+                          player2: str) -> tuple:
+    if player1 not in players or player2 not in players:
+        return set(), set(), set()
+
+    ach1 = players[player1]
+    ach2 = players[player2]
+
+    common = ach1.intersection(ach2)
+    unique1 = ach1.difference(ach2)
+    unique2 = ach2.difference(ach1)
+
+    return common, unique1, unique2
+
+
+def display_achievements(players: dict) -> None:
+    for player_name, achievements in players.items():
+        print(f"Player {player_name} achievements: {achievements}")
+
+
+def analyze_achievements(players: dict) -> None:
+    print("=== Achievement Tracker System ===\n")
+    display_achievements(players)
+
+    print("\n=== Achievement Analytics ===")
+
+    all_achievements = get_all_achievements(players)
+    print(f"All unique achievements: {all_achievements}")
+    print(f"Total unique achievements: {len(all_achievements)}\n")
+
+    common_all = get_common_achievements(players)
+    print(f"Common to all players: {common_all}")
+
+    rare = get_rare_achievements(players)
+    print(f"Rare achievements (1 player): {rare}\n")
+
+    common, unique_alice, unique_bob = get_player_comparison(
+        players, "alice", "bob"
+    )
+    print(f"Alice vs Bob common: {common}")
+    print(f"Alice unique: {unique_alice}")
+    print(f"Bob unique: {unique_bob}")
 
 
 if __name__ == "__main__":
-    main()
+    players = create_players()
+    analyze_achievements(players)
