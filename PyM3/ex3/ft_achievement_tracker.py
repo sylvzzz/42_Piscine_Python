@@ -1,7 +1,7 @@
 import sys
 
 
-def parse_inventory(args: list) -> dict:
+def get_inventory(args: list) -> dict:
     inventory = {}
 
     for arg in args:
@@ -15,8 +15,8 @@ def parse_inventory(args: list) -> dict:
 
             inventory[item_name] = quantity
 
-        except (ValueError, IndexError) as e:
-            print(f"Error parsing '{arg}': {e}")
+        except (ValueError, IndexError) as Error:
+            print(f"Error parsing '{arg}': {Error}")
             continue
 
     return inventory
@@ -29,7 +29,7 @@ def calculate_total_items(inventory: dict) -> int:
     return total
 
 
-def get_most_abundant(inventory: dict) -> tuple:
+def get_most_common(inventory: dict) -> tuple:
     if not inventory:
         return None, 0
 
@@ -44,7 +44,7 @@ def get_most_abundant(inventory: dict) -> tuple:
     return max_item, max_qty
 
 
-def get_least_abundant(inventory: dict) -> tuple:
+def get_least_common(inventory: dict) -> tuple:
     if not inventory:
         return None, 0
 
@@ -59,7 +59,7 @@ def get_least_abundant(inventory: dict) -> tuple:
     return min_item, min_qty
 
 
-def categorize_by_abundance(inventory: dict) -> dict:
+def categorize_achievement(inventory: dict) -> dict:
     categories = {
         "Moderate": {},
         "Scarce": {}
@@ -74,11 +74,11 @@ def categorize_by_abundance(inventory: dict) -> dict:
     return categories
 
 
-def get_restock_suggestions(inventory: dict) -> list:
+def restock_suggestions(inventory: dict) -> list:
     return [item for item, qty in inventory.items() if qty <= 1]
 
 
-def display_inventory_report(inventory: dict) -> None:
+def display_inventory(inventory: dict) -> None:
     if not inventory:
         print("Inventory is empty!")
         return
@@ -113,8 +113,8 @@ def display_inventory_report(inventory: dict) -> None:
         print(f"{item_name}: {quantity} {unit_word} ({percentage:.1f}%)")
 
     print("\n=== Inventory Statistics ===")
-    most_item, most_qty = get_most_abundant(inventory)
-    least_item, least_qty = get_least_abundant(inventory)
+    most_item, most_qty = get_most_common(inventory)
+    least_item, least_qty = get_least_common(inventory)
 
     print(f"Most abundant: {most_item} "
           f"({most_qty} unit{'s' if most_qty != 1 else ''})")
@@ -123,14 +123,14 @@ def display_inventory_report(inventory: dict) -> None:
           f"({least_qty} unit{'s' if least_qty != 1 else ''})")
 
     print("\n=== Item Categories ===")
-    categories = categorize_by_abundance(inventory)
+    categories = categorize_achievement(inventory)
 
     for category, items in categories.items():
         if items:
             print(f"{category}: {items}")
 
     print("\n=== Management Suggestions ===")
-    restock = get_restock_suggestions(inventory)
+    restock = restock_suggestions(inventory)
     print(f"Restock needed: {restock}")
 
     print("\n=== Dictionary Properties Demo ===")
@@ -154,13 +154,12 @@ def main() -> None:
               "potion:5 shield:2 armor:3 helmet:1")
         return
 
-    inventory = parse_inventory(sys.argv[1:])
+    inventory = get_inventory(sys.argv[1:])
 
     if not inventory:
         print("No valid items parsed from arguments.")
         return
-
-    display_inventory_report(inventory)
+    display_inventory(inventory)
 
 
 if __name__ == "__main__":

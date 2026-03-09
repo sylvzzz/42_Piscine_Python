@@ -16,7 +16,7 @@ def game_event_stream(count: int):
         }
 
 
-def process_stream(count: int) -> tuple:
+def process_streams(count: int) -> tuple:
     stream = game_event_stream(count)
     total = 0
     high_level = 0
@@ -51,14 +51,14 @@ def process_stream(count: int) -> tuple:
     return stats, samples
 
 
-def fib_generator():
+def generate_fibonaccis():
     a, b = 0, 1
     while True:
         yield a
         a, b = b, a + b
 
 
-def prime_generator():
+def generate_primes():
     n = 2
     while True:
         is_prime = True
@@ -87,7 +87,7 @@ def main() -> None:
     event_count = 1000
     print(f"Processing {event_count} game events...\n")
 
-    stats, samples = process_stream(event_count)
+    stats, samples = process_streams(event_count)
 
     for line in samples:
         print(line)
@@ -102,8 +102,8 @@ def main() -> None:
     print("Processing time: 1.674 seconds\n")
 
     print("=== Generator Demonstration ===")
-    fibonacci = take(fib_generator(), 10)
-    primes = take(prime_generator(), 5)
+    fibonacci = take(generate_fibonaccis(), 10)
+    primes = take(generate_primes(), 5)
 
     fib_str = ", ".join(str(n) for n in fibonacci)
     prime_str = ", ".join(str(n) for n in primes)

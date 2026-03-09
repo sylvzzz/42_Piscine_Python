@@ -1,4 +1,4 @@
-def create_sample_data() -> tuple:
+def create_samples_data() -> tuple:
     players = [
         {"name": "alice", "score": 2300, "level": 15, "active": True},
         {"name": "bob", "score": 1800, "level": 12, "active": True},
@@ -26,7 +26,7 @@ def create_sample_data() -> tuple:
     return players, achievements, regions
 
 
-def list_comprehension_examples(players: list) -> dict:
+def list_examples(players: list) -> dict:
     high_scorers = [p["name"] for p in players if p["score"] >= 2000]
 
     scores_doubled = [p["score"] * 2 for p in players if p["active"]]
@@ -40,7 +40,7 @@ def list_comprehension_examples(players: list) -> dict:
     }
 
 
-def dict_comprehension_examples(players: list, achievements: dict) -> dict:
+def dict_examples(players: list, achievements: dict) -> dict:
     player_scores = {p["name"]: p["score"] for p in players}
 
     score_categories = {
@@ -60,8 +60,7 @@ def dict_comprehension_examples(players: list, achievements: dict) -> dict:
     }
 
 
-def set_comprehension_examples(players: list, achievements: dict,
-                               regions: list) -> dict:
+def set_examples(players: list, achievements: dict, regions: list) -> dict:
     unique_players = {p["name"] for p in players}
     unique_achievements = {
         ach for achs in achievements.values() for ach in achs
@@ -76,7 +75,7 @@ def set_comprehension_examples(players: list, achievements: dict,
     }
 
 
-def combined_analysis(players: list, achievements: dict) -> dict:
+def report(players: list, achievements: dict) -> dict:
     total_players = len(players)
 
     all_achievements = {
@@ -110,16 +109,16 @@ def combined_analysis(players: list, achievements: dict) -> dict:
 def main() -> None:
     print("=== Game Analytics Dashboard ===\n")
 
-    players, achievements, regions = create_sample_data()
+    players, achievements, regions = create_samples_data()
 
     print("=== List Comprehension Examples ===")
-    list_results = list_comprehension_examples(players)
+    list_results = list_examples(players)
     print(f"High scorers (>2000): {list_results['high_scorers']}")
     print(f"Scores doubled: {list_results['scores_doubled']}")
     print(f"Active players: {list_results['active_players']}\n")
 
     print("=== Dict Comprehension Examples ===")
-    dict_results = dict_comprehension_examples(players, achievements)
+    dict_results = dict_examples(players, achievements)
     player_scores_preview = {
         k: v for k, v in sorted(list(dict_results['player_scores'].items()))
         [:3]
@@ -134,17 +133,17 @@ def main() -> None:
     print(f"Achievement counts: {achievement_preview}\n")
 
     print("=== Set Comprehension Examples ===")
-    set_results = set_comprehension_examples(players, achievements, regions)
+    set_results = set_examples(players, achievements, regions)
     print(f"Unique players: {set_results['unique_players']}")
     print(f"Unique achievements: {set_results['unique_achievements']}")
     print(f"Active regions: {set_results['active_regions']}\n")
 
     print("=== Combined Analysis ===")
-    analysis = combined_analysis(players, achievements)
-    print(f"Total players: {analysis['total_players']}")
-    print(f"Total unique achievements: {analysis['total_achievements']}")
-    print(f"Average score: {analysis['avg_score']}")
-    top = analysis['top_performer']
+    FinalReport = report(players, achievements)
+    print(f"Total players: {FinalReport['total_players']}")
+    print(f"Total unique achievements: {FinalReport['total_achievements']}")
+    print(f"Average score: {FinalReport['avg_score']}")
+    top = FinalReport['top_performer']
     print(
         f"Top performer: {top['name']} "
         f"({top['score']} points, {top['achievements']} achievements)"
