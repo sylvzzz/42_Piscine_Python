@@ -27,14 +27,14 @@ def create_samples_data() -> tuple:
 
 
 def list_examples(players: list) -> dict:
-    high_scorers = [p["name"] for p in players if p["score"] >= 2000]
+    high_scores = [p["name"] for p in players if p["score"] >= 2000]
 
     scores_doubled = [p["score"] * 2 for p in players]
 
     active_players = [p["name"] for p in players if p["active"]]
 
     return {
-        "high_scorers": high_scorers,
+        "high_scores": high_scores,
         "scores_doubled": scores_doubled,
         "active_players": active_players
     }
