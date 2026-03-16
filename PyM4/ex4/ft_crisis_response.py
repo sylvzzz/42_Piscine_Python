@@ -8,7 +8,7 @@ def main() -> None:
     ]
 
     for file in files:
-        print(f"\nAttempting access to '{file}'...")
+        print(f"\nCRISIS ALERT: Attempting access to '{file}'...")
 
         try:
             with open(file, "r") as file:
