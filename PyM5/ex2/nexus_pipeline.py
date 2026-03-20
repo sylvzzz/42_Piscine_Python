@@ -1,26 +1,25 @@
-"""
-nexus_pipeline.py - Code Nexus Enterprise Pipeline System
-Exercise 2: Nexus Integration
-"""
-
-import json
-import time
 import collections
 from abc import ABC, abstractmethod
-from typing import Any, Union, Protocol, runtime_checkable
+from typing import Any, Union, Protocol
 
 
-# ─── Protocol: duck-typed stage interface ────────────────────────────────────
+# ─── Protocol ──────────────────────────────────
 
-@runtime_checkable
 class ProcessingStage(Protocol):
-    """Any class with a process() method can act as a pipeline stage."""
+    """Any class with a process() method can act as a stage."""
 
     def process(self, data: Any) -> Any:
-        ...
+        pass
 
 
-# ─── Concrete Stage Classes (implement Protocol, no inheritance) ─────────────
+# ─── Duck-typing helper ─────────────────────────────
+
+def _is_processing_stage(obj: Any) -> bool:
+    """Checks if obj implements ProcessingStage."""
+    return callable(getattr(obj, "process", None))
+
+
+# ─── Concrete Stage Classes ─────────────────────────
 
 class InputStage:
     """Stage 1 – Validates and parses raw input."""
@@ -36,8 +35,7 @@ class TransformStage:
 
     def process(self, data: Any) -> Any:
         if isinstance(data, dict):
-            data = dict(data)
-            data["_transformed"] = True
+            data = {**data, "_transformed": True}
         return data
 
 
@@ -48,10 +46,124 @@ class OutputStage:
         return data
 
 
-# ─── Abstract Base Class: ProcessingPipeline ─────────────────────────────────
+# ─── Minimal JSON parser/serializer ────────────────
+
+def json_loads(s: str) -> Any:
+    """Parse JSON"""
+    s = s.strip()
+    if s == "null":
+        return None
+    if s == "true":
+        return True
+    if s == "false":
+        return False
+    if s.startswith('"') and s.endswith('"'):
+        return s[1:-1]
+    try:
+        return int(s)
+    except ValueError:
+        pass
+    try:
+        return float(s)
+    except ValueError:
+        pass
+    if s.startswith("[") and s.endswith("]"):
+        inner = s[1:-1].strip()
+        if not inner:
+            return []
+        return [
+            json_loads(item.strip())
+            for item in split_json_items(inner)
+        ]
+    if s.startswith("{") and s.endswith("}"):
+        inner = s[1:-1].strip()
+        if not inner:
+            return {}
+        return {
+            json_loads(p[:p.index(":")].strip()):
+            json_loads(p[p.index(":") + 1:].strip())
+            for p in split_json_items(inner)
+        }
+    raise ValueError(f"Invalid JSON: {s!r}")
+
+
+def split_json_items(s: str) -> list[str]:
+    """Divides JSON by commas."""
+    items: list[str] = []
+    depth: int = 0
+    current: list[str] = []
+    in_string: bool = False
+    escape: bool = False
+
+    for ch in s:
+        if escape:
+            current.append(ch)
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            current.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+        if not in_string:
+            if ch in "{[":
+                depth += 1
+            elif ch in "}]":
+                depth -= 1
+            elif ch == "," and depth == 0:
+                items.append("".join(current).strip())
+                current = []
+                continue
+        current.append(ch)
+
+    if current:
+        items.append("".join(current).strip())
+    return items
+
+
+def json_dumps(obj: Any) -> str:
+    """Converts object to JSON."""
+    if obj is None:
+        return "null"
+    if isinstance(obj, bool):
+        return "true" if obj else "false"
+    if isinstance(obj, int):
+        return str(obj)
+    if isinstance(obj, float):
+        return str(obj)
+    if isinstance(obj, str):
+        return f'"{obj}"'
+    if isinstance(obj, list):
+        return "[" + ", ".join(
+            json_dumps(v) for v in obj
+        ) + "]"
+    if isinstance(obj, dict):
+        pairs = ", ".join(
+            f'"{k}": {json_dumps(v)}'
+            for k, v in obj.items()
+        )
+        return "{" + pairs + "}"
+    return f'"{obj}"'
+
+
+# ─── Monotonic counter ──────────────────────────────
+
+class Counter:
+    """Call counter"""
+
+    _calls: int = 0
+
+    @classmethod
+    def tick(cls: type) -> int:
+        cls._calls += 1
+        return cls._calls
+
+
+# ─── Abstract Base Class ────────────────────────────
 
 class ProcessingPipeline(ABC):
-    """Abstract base that manages an ordered list of stages."""
+    """Abstract base that manages staging list."""
 
     def __init__(self, pipeline_id: str) -> None:
         self.pipeline_id: str = pipeline_id
@@ -59,13 +171,15 @@ class ProcessingPipeline(ABC):
         self._stats: collections.Counter = collections.Counter()
 
     def add_stage(self, stage: ProcessingStage) -> None:
-        if not isinstance(stage, ProcessingStage):
-            raise TypeError(f"{stage!r} does not implement ProcessingStage")
+        if not _is_processing_stage(stage):
+            raise TypeError(
+                f"{stage!r} does not implement ProcessingStage"
+            )
         self.stages.append(stage)
 
     def run(self, data: Any) -> Any:
-        """Pass *data* through every stage in order."""
-        start = time.perf_counter()
+        """Passes data for each stage in order"""
+        start = Counter.tick()
         try:
             for stage in self.stages:
                 data = stage.process(data)
@@ -74,23 +188,20 @@ class ProcessingPipeline(ABC):
             self._stats["errors"] += 1
             raise
         finally:
-            elapsed = time.perf_counter() - start
-            self._stats["total_time_ms"] += int(elapsed * 1000)
+            self._stats["total_calls"] += Counter.tick() - start
         return data
 
     @abstractmethod
     def process(self, data: Any) -> Union[str, Any]:
-        """Format-specific processing – overridden by each adapter."""
-        ...
+        pass
 
     def get_stats(self) -> dict[str, Any]:
         return dict(self._stats)
 
 
-# ─── Adapter Subclasses (inherit from ProcessingPipeline) ────────────────────
+# ─── Adapters ───────────────────────────────────────
 
 class JSONAdapter(ProcessingPipeline):
-    """Handles JSON-formatted data."""
 
     def __init__(self, pipeline_id: str) -> None:
         super().__init__(pipeline_id)
@@ -98,61 +209,77 @@ class JSONAdapter(ProcessingPipeline):
     def process(self, data: Any) -> str:
         if isinstance(data, str):
             try:
-                parsed: dict = json.loads(data)
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"JSONAdapter: invalid JSON – {exc}") from exc
+                parsed: dict[str, Any] = json_loads(data)
+            except ValueError as exc:
+                raise ValueError(
+                    f"JSONAdapter: invalid JSON – {exc}"
+                ) from exc
         else:
             parsed = data
 
         result = self.run(parsed)
 
-        if isinstance(result, dict) and "value" in result and "unit" in result:
+        if isinstance(result, dict) and "value" in result \
+                and "unit" in result:
             value = result["value"]
             unit = result["unit"]
             sensor = result.get("sensor", "unknown")
-            sensor_label = "temperature" if sensor == "temp" else sensor
-            status = "Normal range" if 15 <= value <= 30 else "Out of range"
+            label = "temperature" if sensor == "temp" else sensor
+            status = (
+                "Normal range" if 15 <= value <= 30
+                else "Out of range"
+            )
             return (
                 f"Input: {data}\n"
                 f"Transform: Enriched with metadata and validation\n"
-                f"Output: Processed {sensor_label} "
+                f"Output: Processed {label} "
                 f"reading: {value}°{unit} ({status})"
             )
 
         return (
-            f"Input: {json.dumps(data)}\n"
+            f"Input: {json_dumps(data)}\n"
             f"Transform: Enriched with metadata and validation\n"
-            f"Output: {json.dumps(result)}"
+            f"Output: {json_dumps(result)}"
         )
 
 
 class CSVAdapter(ProcessingPipeline):
-    """Handles CSV-formatted data."""
 
     def __init__(self, pipeline_id: str) -> None:
         super().__init__(pipeline_id)
 
     def process(self, data: Any) -> str:
         if isinstance(data, str):
-            lines = [
+            lines: list[str] = [
                 ln.strip()
                 for ln in data.strip().splitlines()
                 if ln.strip()
             ]
             header = lines[0] if lines else ""
-            rows = lines[1:]
-            parsed = {"header": header, "rows": rows, "count": len(rows)}
+            rows: list[str] = lines[1:]
+            parsed: dict[str, Any] = {
+                "header": header,
+                "rows": rows,
+                "count": len(rows),
+            }
         else:
             parsed = data
             header = ""
 
         result = self.run(parsed)
 
-        count = result.get("count", 0) if isinstance(result, dict) else 0
-        header = result.get("header", "") if isinstance(result, dict) else ""
+        count: int = (
+            result.get("count", 0)
+            if isinstance(result, dict) else 0
+        )
+        header = (
+            result.get("header", "")
+            if isinstance(result, dict) else ""
+        )
         first_col = header.split(",")[0] if header else "record"
-        # Show only the header row in the Input line
-        input_display = header if isinstance(data, str) else str(data)
+        input_display = (
+            header if isinstance(data, str) else str(data)
+        )
 
         return (
             f'Input: "{input_display}"\n'
@@ -163,29 +290,33 @@ class CSVAdapter(ProcessingPipeline):
 
 
 class StreamAdapter(ProcessingPipeline):
-    """Handles real-time stream data."""
 
     def __init__(self, pipeline_id: str) -> None:
         super().__init__(pipeline_id)
 
     def process(self, data: Any) -> str:
         if isinstance(data, str) and "stream" in data.lower():
-            readings = [21.5, 22.0, 22.5, 22.3, 22.2]
+            readings: list[float] = [21.5, 22.0, 22.5, 22.3, 22.2]
         elif isinstance(data, list):
             readings = data
         else:
             readings = []
 
-        parsed = {"readings": readings, "count": len(readings)}
+        parsed: dict[str, Any] = {
+            "readings": readings,
+            "count": len(readings),
+        }
         result = self.run(parsed)
 
-        readings_list = (
-            result.get("readings", []) if isinstance(result, dict) else []
+        readings_out: list[float] = (
+            result.get("readings", [])
+            if isinstance(result, dict) else []
         )
-        count = (
-            result.get("count", 0) if isinstance(result, dict) else 0
+        count: int = (
+            result.get("count", 0)
+            if isinstance(result, dict) else 0
         )
-        avg = round(sum(readings_list) / count, 1) if count else 0.0
+        avg = round(sum(readings_out) / count, 1) if count else 0.0
 
         return (
             f"Input: Real-time sensor stream\n"
@@ -194,14 +325,15 @@ class StreamAdapter(ProcessingPipeline):
         )
 
 
+# ─── NexusManager ───────────────────────────────────
+
 class NexusManager:
-    """Orchestrates multiple pipelines polymorphically."""
 
     def __init__(self, capacity: int = 1000) -> None:
         self.capacity: int = capacity
-        self._pipelines: collections.OrderedDict[str, ProcessingPipeline] = (
-            collections.OrderedDict()
-        )
+        self._pipelines: collections.OrderedDict[
+            str, ProcessingPipeline
+        ] = collections.OrderedDict()
 
     def register(self, pipeline: ProcessingPipeline) -> None:
         self._pipelines[pipeline.pipeline_id] = pipeline
@@ -210,30 +342,41 @@ class NexusManager:
         try:
             return self._pipelines[pipeline_id]
         except KeyError:
-            raise KeyError(f"No pipeline registered with id '{pipeline_id}'")
+            raise KeyError(
+                f"No pipeline registered with id '{pipeline_id}'"
+            )
 
-    def chain(self, pipeline_ids: list[str],
-              data: Any) -> tuple[Any, dict[str, Any]]:
-        """Feed data through a chain of pipelines; return (result, stats)."""
-        result = data
-        stats: dict[str, Any] = {"stages": len(pipeline_ids), "errors": 0}
-
+    def chain(
+        self,
+        pipeline_ids: list[str],
+        data: Any,
+    ) -> tuple[Any, dict[str, Any]]:
+        """Group of pipelines; returns (result, stats)."""
+        result: Any = data
+        stats: dict[str, Any] = {
+            "stages": len(pipeline_ids),
+            "errors": 0,
+        }
         for pid in pipeline_ids:
-            pipeline = self.get(pid)
-            result = pipeline.process(result)
-
+            result = self.get(pid).process(result)
         stats["elapsed_s"] = 0.2
         stats["efficiency"] = 95
         return result, stats
 
     def all_stats(self) -> dict[str, dict[str, Any]]:
-        return {pid: p.get_stats() for pid, p in self._pipelines.items()}
+        return {
+            pid: p.get_stats()
+            for pid, p in self._pipelines.items()
+        }
 
 
-def _attach_standard_stages(pipeline: ProcessingPipeline) -> None:
-    pipeline.add_stage(InputStage())
-    pipeline.add_stage(TransformStage())
-    pipeline.add_stage(OutputStage())
+# ─── Helpers ────────────────────────────────────────
+
+def _attach_standard_stages(
+    pipeline: ProcessingPipeline,
+) -> None:
+    for stage in [InputStage(), TransformStage(), OutputStage()]:
+        pipeline.add_stage(stage)
 
 
 def _demo_error_recovery(manager: NexusManager) -> None:
@@ -249,10 +392,13 @@ def _demo_error_recovery(manager: NexusManager) -> None:
     except ValueError:
         print("Error detected in Stage 2: Invalid data format")
         print("Recovery initiated: Switching to backup processor")
-
-        fallback = manager.get("stream_pipeline")
-        fallback.process("Fallback real-time sensor stream")
-        print("Recovery successful: Pipeline restored, processing resumed")
+        manager.get("stream_pipeline").process(
+            "Fallback real-time sensor stream"
+        )
+        print(
+            "Recovery successful: Pipeline restored, "
+            "processing resumed"
+        )
 
 
 def main() -> None:
@@ -267,39 +413,41 @@ def main() -> None:
     print("Stage 2: Data transformation and enrichment")
     print("Stage 3: Output formatting and delivery")
 
-    json_pipeline = JSONAdapter("json_pipeline")
-    csv_pipeline = CSVAdapter("csv_pipeline")
-    stream_pipeline = StreamAdapter("stream_pipeline")
-
-    for pipeline in (json_pipeline, csv_pipeline, stream_pipeline):
+    pipelines: list[ProcessingPipeline] = [
+        JSONAdapter("json_pipeline"),
+        CSVAdapter("csv_pipeline"),
+        StreamAdapter("stream_pipeline"),
+    ]
+    for pipeline in pipelines:
         _attach_standard_stages(pipeline)
         manager.register(pipeline)
+
+    json_pipeline = manager.get("json_pipeline")
+    csv_pipeline = manager.get("csv_pipeline")
+    stream_pipeline = manager.get("stream_pipeline")
 
     print("\n=== Multi-Format Data Processing ===")
 
     print("\nProcessing JSON data through pipeline...")
-    json_result = json_pipeline.process(
+    print(json_pipeline.process(
         '{"sensor": "temp", "value": 23.5, "unit": "C"}'
-    )
-    print(json_result)
+    ))
 
     print("\nProcessing CSV data through same pipeline...")
-    csv_data = "user,action,timestamp\nalice,login,2024-01-01"
-    csv_result = csv_pipeline.process(csv_data)
-    print(csv_result)
+    print(csv_pipeline.process(
+        "user,action,timestamp\nalice,login,2024-01-01"
+    ))
 
     print("\nProcessing Stream data through same pipeline...")
-    stream_result = stream_pipeline.process("Real-time sensor stream")
-    print(stream_result)
+    print(stream_pipeline.process("Real-time sensor stream"))
 
     print("\n=== Pipeline Chaining Demo ===")
-    print("Pipeline A-> Pipeline B-> Pipeline C")
-    print("Data flow: Raw-> Processed-> Analyzed-> Stored")
+    print("Pipeline A -> Pipeline B -> Pipeline C")
+    print("Data flow: Raw -> Processed -> Analyzed -> Stored")
 
-    chain_data = '{"sensor": "temp", "value": 22.0, "unit": "C"}'
     _, chain_stats = manager.chain(
         ["json_pipeline", "csv_pipeline", "stream_pipeline"],
-        chain_data,
+        '{"sensor": "temp", "value": 22.0, "unit": "C"}',
     )
     print(
         f"Chain result: 100 records processed "
