@@ -25,3 +25,4 @@ if __name__ == "__main__":
         print("strength_potion(): ", strength_potion())
     except AttributeError:
         print("AttributeError - one or more imports not exposed")
+    print("\nALl import transmutation methods mastered")

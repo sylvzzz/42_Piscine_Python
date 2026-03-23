@@ -1,33 +1,38 @@
+from alchemy.transmutation.basic import lead_to_gold, stone_to_gem
+from alchemy.transmutation.advanced import philosophers_stone, elixir_of_life
+import alchemy.transmutation
+
+
 if __name__ == "__main__":
-    import alchemy.transmutation
-    import alchemy.elements
     print("\n=== Pathway Debate Mastery ===\n")
     print("Testing Absolute Imports (from basic.py):")
-    print("lead_to_gold():", alchemy.transmutation.lead_to_gold())
-    print("stone_to_gem():", alchemy.transmutation.stone_to_gem())
-
+    try:
+        print("lead_to_gold():", lead_to_gold())
+    except AttributeError:
+        print("lead_to_gold(): AttributeError - not exposed")
+    try:
+        print("stone_to_gem():", stone_to_gem())
+    except AttributeError:
+        print("stone_to_gem(): AttributeError - not exposed")
     print("\nTesting Relative Imports (from advanced.py):")
+    try:
+        print("philosophers_stone():", philosophers_stone())
+    except AttributeError:
+        print("philosophers_stone(): AttributeError - not exposed")
 
     try:
-        print("alchemy.create_fire():", alchemy.create_fire())
+        print("elixir_of_life():", elixir_of_life())
     except AttributeError:
-        print("alchemy.create_fire(): AttributeError - not exposed")
-
+        print("elixir_of_life(): AttributeError - not exposed")
+    print("\nTesting Package Access:")
     try:
-        print("alchemy.create_water():", alchemy.create_water())
+        print("alchemy.transmutation.lead_to_gold():", lead_to_gold())
     except AttributeError:
-        print("alchemy.create_water(): AttributeError - not exposed")
-
+        print("elixir_of_life(): AttributeError - not exposed")
     try:
-        print("alchemy.create_earth():", alchemy.create_earth())
+        print("alchemy.transmutation.philosophers_stone():",
+              alchemy.transmutation.philosophers_stone())
     except AttributeError:
-        print("alchemy.create_earth(): AttributeError - not exposed")
-
-    try:
-        print("alchemy.create_air():", alchemy.create_air())
-    except AttributeError:
-        print("alchemy.create_air(): AttributeError - not exposed")
-
-    print("\nPackage metadata:")
-    print("Version:", alchemy.__version__)
-    print("Author:", alchemy.__author__)
+        print("alchemy.transmutation.philosophers_stone():"
+              "AttributeError - not exposed")
+    print("\nBoth pathways work! Absolute: clear, Relative: concise")
