@@ -8,28 +8,15 @@ class ArtifactCard:
         self.effect = effect
 
     def play(self, game_state: dict) -> dict:
-        player = game_state.get("player")
+        if game_state.get("mana", 0) < self.cost:
+            return {"error": "Not enough mana"}
 
-        if player["mana"] < self.cost:
-            raise ValueError(f"Not enough mana to play {self.name}")
-
-        # Deduct mana
-        player["mana"] -= self.cost
-
-        # Add artifact to board
-        if "artifacts" not in player:
-            player["artifacts"] = []
-        player["artifacts"].append(self)
-
-        # Remove from hand
-        if "hand" in player and self in player["hand"]:
-            player["hand"].remove(self)
+        game_state["mana"] -= self.cost
 
         return {
-            "status": "artifact_played",
-            "card": self.name,
-            "remaining_mana": player["mana"],
-            "durability": self.durability
+            "card_played": self.name,
+            "mana_used": self.cost,
+            "effect": "Permanent: +1 mana per turn"
         }
 
     def activate_ability(self, game_state: dict) -> dict:

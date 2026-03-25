@@ -7,28 +7,15 @@ class SpellCard:
         self.effect_type = effect_type
 
     def play(self, game_state: dict) -> dict:
-        player = game_state.get("player")
-        targets = game_state.get("targets", [])
+        if game_state.get("mana", 0) < self.cost:
+            return {"error": "Not enough mana"}
 
-        # Check mana
-        if player["mana"] < self.cost:
-            raise ValueError(f"Not enough mana to play {self.name}")
-
-        # Deduct mana
-        player["mana"] -= self.cost
-
-        # Resolve effect
-        result = self.resolve_effect(targets)
-
-        # Spell is consumed → remove from hand
-        if "hand" in player and self in player["hand"]:
-            player["hand"].remove(self)
+        game_state["mana"] -= self.cost
 
         return {
-            "status": "played",
-            "card": self.name,
-            "effect_result": result,
-            "remaining_mana": player["mana"]
+            "card_played": self.name,
+            "mana_used": self.cost,
+            "effect": "Deal 3 damage to target"
         }
 
     def resolve_effect(self, targets: list) -> dict:

@@ -5,8 +5,8 @@ from ex0.CreatureCard import CreatureCard
 
 
 def main():
-    print("=== DataDeck Deck Builder ===")
-    print("Building deck with different card types...")
+    print("\n=== DataDeck Deck Builder ===")
+    print("\nBuilding deck with different card types...")
 
     # Create cards
     spell = SpellCard("Lightning Bolt", 3, "common", "damage")
@@ -42,7 +42,7 @@ def main():
         "enemies": []
     }
 
-    print("Drawing and playing cards:")
+    print("\nDrawing and playing cards:")
 
     deck.shuffle()
 
@@ -57,7 +57,7 @@ def main():
         else:
             card_type = card.__class__.__name__.replace("Card", "")
 
-        print(f"Drew: {card.name} ({card_type})")
+        print(f"\nDrew: {card.name} ({card_type})")
 
         # Play card (polymorphism)
         result = card.play(game_state)
@@ -78,7 +78,8 @@ def main():
 
         print(f"Play result: {result}")
 
-    print("Polymorphism in action: Same interface, different card behaviors!")
+    print("\nPolymorphism in action: Same interface,"
+          " different card behaviors!")
 
 
 if __name__ == "__main__":
