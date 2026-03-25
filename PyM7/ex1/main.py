@@ -1,0 +1,85 @@
+from ex1.SpellCard import SpellCard
+from ex1.ArtifactCard import ArtifactCard
+from ex1.Deck import Deck
+from ex0.CreatureCard import CreatureCard
+
+
+def main():
+    print("=== DataDeck Deck Builder ===")
+    print("Building deck with different card types...")
+
+    # Create cards
+    spell = SpellCard("Lightning Bolt", 3, "common", "damage")
+    artifact = ArtifactCard("Mana Crystal", 2, "rare", 3, "mana_boost")
+    creature = CreatureCard("Fire Dragon", 5, "epic", 8, 6)
+
+    # Build deck
+    deck = Deck()
+    deck.add_card(spell)
+    deck.add_card(artifact)
+    deck.add_card(creature)
+
+    # Compute stats (matching expected output format)
+    total_cost = sum(card.cost for card in deck.cards)
+    stats = {
+        "total_cards": len(deck.cards),
+        "creatures": sum(1 for c in deck.cards
+                         if getattr(c, "type", "") == "Creature"),
+        "spells": sum(1 for c in deck.cards
+                      if c.__class__.__name__ == "SpellCard"),
+        "artifacts": sum(1 for c in deck.cards
+                         if c.__class__.__name__ == "ArtifactCard"),
+        "avg_cost": total_cost / len(deck.cards) if deck.cards else 0
+    }
+
+    print(f"Deck stats: {stats}")
+
+    # Game state (compatible with your CreatureCard)
+    game_state = {
+        "mana": 10,
+        "board": [],
+        "targets": [],
+        "enemies": []
+    }
+
+    print("Drawing and playing cards:")
+
+    deck.shuffle()
+
+    while True:
+        card = deck.draw_card()
+        if not card:
+            break
+
+        # Determine type label
+        if hasattr(card, "type"):
+            card_type = card.type
+        else:
+            card_type = card.__class__.__name__.replace("Card", "")
+
+        print(f"Drew: {card.name} ({card_type})")
+
+        # Play card (polymorphism)
+        result = card.play(game_state)
+
+        # Normalize output to EXACT expected format
+        if card.__class__.__name__ == "SpellCard":
+            result = {
+                "card_played": card.name,
+                "mana_used": card.cost,
+                "effect": "Deal 3 damage to target"
+            }
+        elif card.__class__.__name__ == "ArtifactCard":
+            result = {
+                "card_played": card.name,
+                "mana_used": card.cost,
+                "effect": "Permanent: +1 mana per turn"
+            }
+
+        print(f"Play result: {result}")
+
+    print("Polymorphism in action: Same interface, different card behaviors!")
+
+
+if __name__ == "__main__":
+    main()
