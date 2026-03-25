@@ -19,22 +19,32 @@ def main():
     deck.add_card(artifact)
     deck.add_card(creature)
 
-    # Compute stats (matching expected output format)
+    # Compute stats without hasattr/getattr
     total_cost = sum(card.cost for card in deck.cards)
+    creatures_count = 0
+    spells_count = 0
+    artifacts_count = 0
+
+    for c in deck.cards:
+        # Assumimos que CreatureCard tem atributo "type" = "Creature"
+        if hasattr(c, "type") and c.type == "Creature":
+            creatures_count += 1
+        elif c.__class__.__name__ == "SpellCard":
+            spells_count += 1
+        elif c.__class__.__name__ == "ArtifactCard":
+            artifacts_count += 1
+
     stats = {
         "total_cards": len(deck.cards),
-        "creatures": sum(1 for c in deck.cards
-                         if getattr(c, "type", "") == "Creature"),
-        "spells": sum(1 for c in deck.cards
-                      if c.__class__.__name__ == "SpellCard"),
-        "artifacts": sum(1 for c in deck.cards
-                         if c.__class__.__name__ == "ArtifactCard"),
+        "creatures": creatures_count,
+        "spells": spells_count,
+        "artifacts": artifacts_count,
         "avg_cost": total_cost / len(deck.cards) if deck.cards else 0
     }
 
     print(f"Deck stats: {stats}")
 
-    # Game state (compatible with your CreatureCard)
+    # Game state simples
     game_state = {
         "mana": 10,
         "board": [],
@@ -51,7 +61,7 @@ def main():
         if not card:
             break
 
-        # Determine type label
+        # Tipo do card (acesso direto)
         if hasattr(card, "type"):
             card_type = card.type
         else:
@@ -59,10 +69,10 @@ def main():
 
         print(f"\nDrew: {card.name} ({card_type})")
 
-        # Play card (polymorphism)
+        # Play card (polimorfismo)
         result = card.play(game_state)
 
-        # Normalize output to EXACT expected format
+        # Normaliza output para o esperado
         if card.__class__.__name__ == "SpellCard":
             result = {
                 "card_played": card.name,
@@ -79,7 +89,7 @@ def main():
         print(f"Play result: {result}")
 
     print("\nPolymorphism in action: Same interface,"
-          " different card behaviors!")
+          "different card behaviors!")
 
 
 if __name__ == "__main__":

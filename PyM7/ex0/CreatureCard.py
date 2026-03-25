@@ -39,15 +39,14 @@ class CreatureCard(Card):
         }
 
     def attack_target(self, target) -> Dict:
-        if not hasattr(target, "health"):
-            return {"error": "Invalid target"}
-
         damage = self.attack
+
         target.health -= damage
-        self.health -= getattr(target, "attack", 0)
+        self.health -= target.attack
+
         return {
             "attacker": self.name,
-            "target": getattr(target, "name", "Unknown"),
+            "target": target.name,
             "damage_dealt": damage,
             "combat_resolved": True
         }
