@@ -1,0 +1,68 @@
+Abstract Base Classes (ABC)
+
+What ABC and @abstractmethod are and why we use them
+A class with abstract methods cannot be instantiated directly
+Any subclass must implement all abstract methods or it also becomes abstract
+
+Multiple Inheritance
+
+How Python resolves method conflicts using MRO (Method Resolution Order)
+Why super().__init__() is important in multiple inheritance
+How EliteCard(Card, Combatable, Magical) combines three interfaces
+
+Design Patterns
+
+Strategy Pattern — defines a family of algorithms (AggressiveStrategy) that can be swapped at runtime via configure_engine()
+Abstract Factory Pattern — CardFactory defines the interface, FantasyCardFactory is the concrete implementation that creates themed objects
+Why these patterns promote flexibility and decoupling
+
+OOP Pillars
+
+Polymorphism — same method name (play, attack) behaves differently per class
+Encapsulation — each class manages its own state (rating, wins, losses)
+Inheritance — TournamentCard inherits from Card, Combatable, Rankable
+
+Python Specifics
+
+__class__.__name__ to get the class name as a string
+isinstance() vs __class__.__name__ checks
+@abstractmethod decorator behavior
+Why __init__.py makes a folder a package
+
+Interface Design
+
+Difference between an abstract interface and a concrete class
+Why separating Combatable, Magical, Rankable into separate interfaces gives flexibility — a card can implement only what it needs
+
+
+**`__init__.py`**
+- Why it exists — marks a directory as a Python package
+- The role of `__all__` — controls what gets exported when someone does `from ex4 import *`
+- Difference between having imports in it vs leaving it empty
+
+**Module System**
+- Difference between `python3 main.py` and `python3 -m ex4.main`
+- Why `-m` is needed when using relative imports across packages
+- How Python resolves import paths (`ex0.Card`, `ex2.Combatable`, etc.)
+
+**Type Hints**
+- What `-> dict`, `-> list`, `-> str` mean
+- `str | int | None` union types (Python 3.10+)
+- Why they don't enforce anything at runtime — they're just hints
+
+**`super()`**
+- How `super().__init__()` works in a chain of inherited classes
+- What happens if you don't call it
+
+**Bubble Sort vs Built-in Sort**
+- Why we replaced `sorted()` with a manual bubble sort — to avoid `lambda`
+- Trade-offs: readability vs constraints
+
+**Encapsulation of State**
+- Why `TournamentPlatform` owns the `cards` dict and `matches_played` counter
+- Why cards don't know about each other — the platform manages relationships
+
+**Concrete vs Abstract**
+- You should be able to clearly explain which classes are abstract and which are concrete in each exercise
+- `GameStrategy`, `CardFactory`, `Combatable`, `Magical`, `Rankable` → abstract
+- `AggressiveStrategy`, `FantasyCardFactory`, `EliteCard`, `TournamentCard` → concrete
