@@ -168,9 +168,9 @@ def main() -> None:
             crew=[cadet],  # Invalid: no Commander or Captain
             budget_millions=500.0,
         )
-    except ValidationError as e:
-        for error in e.errors():
-            print(error["msg"])
+    except ValidationError as Error:
+        for Error in Error.errors():
+            print(Error["msg"])
 
 
 if __name__ == "__main__":

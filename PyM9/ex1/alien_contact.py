@@ -95,9 +95,9 @@ def main() -> None:
             witness_count=1,
             is_verified=False,
         )
-    except ValidationError as e:
-        for error in e.errors():
-            print(error["msg"])
+    except ValidationError as Error:
+        for Error in Error.errors():
+            print(Error["msg"])
 
 
 if __name__ == "__main__":

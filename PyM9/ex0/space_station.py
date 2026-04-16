@@ -32,7 +32,7 @@ def main() -> None:
     if valid_station.is_operational:
         status = "Operational"
     else:
-        "Offline"
+        status = "Offline"
 
     print("Valid station created:")
     print(f"ID: {valid_station.station_id}")
@@ -53,9 +53,9 @@ def main() -> None:
             oxygen_level=80.0,
             last_maintenance="2024-01-15T08:30:00",
         )
-    except ValidationError as e:
-        for error in e.errors():
-            print(error["msg"])
+    except ValidationError as Error:
+        for Error in Error.errors():
+            print(Error["msg"])
 
 
 if __name__ == "__main__":
