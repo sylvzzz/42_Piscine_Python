@@ -64,7 +64,7 @@ def main() -> None:
     # Create a valid contact report
     valid_contact = AlienContact(
         contact_id="AC_2024_001",
-        timestamp="2024-03-20T22:15:00",
+        timestamp=datetime(2024, 3, 20, 22, 15, 0),
         location="Area 51, Nevada",
         contact_type=ContactType.radio,
         signal_strength=8.5,
@@ -87,7 +87,7 @@ def main() -> None:
     try:
         AlienContact(
             contact_id="AC_2024_002",
-            timestamp="2024-03-21T01:00:00",
+            timestamp=datetime(2024, 3, 21, 1, 0, 0),
             location="Roswell, New Mexico",
             contact_type=ContactType.telepathic,
             signal_strength=5.0,
@@ -95,9 +95,9 @@ def main() -> None:
             witness_count=1,
             is_verified=False,
         )
-    except ValidationError as Error:
-        for Error in Error.errors():
-            print(Error["msg"])
+    except ValidationError as exc:
+        for error in exc.errors():
+            print(error["msg"])
 
 
 if __name__ == "__main__":

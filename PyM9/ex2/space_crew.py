@@ -124,7 +124,7 @@ def main() -> None:
         mission_id="M2024_MARS",
         mission_name="Mars Colony Establishment",
         destination="Mars",
-        launch_date="2024-06-01T09:00:00",
+        launch_date=datetime(2024, 6, 1, 9, 0, 0),
         duration_days=900,
         crew=[commander, lieutenant, officer],
         mission_status="planned",
@@ -163,14 +163,14 @@ def main() -> None:
             mission_id="M2024_BAD",
             mission_name="Doomed Expedition",
             destination="Jupiter",
-            launch_date="2024-07-01T09:00:00",
+            launch_date=datetime(2024, 7, 1, 9, 0, 0),
             duration_days=200,
             crew=[cadet],  # Invalid: no Commander or Captain
             budget_millions=500.0,
         )
-    except ValidationError as Error:
-        for Error in Error.errors():
-            print(Error["msg"])
+    except ValidationError as exc:
+        for error in exc.errors():
+            print(error["msg"])
 
 
 if __name__ == "__main__":

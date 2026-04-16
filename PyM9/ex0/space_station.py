@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, Field, ValidationError
 
 
@@ -24,7 +25,7 @@ def main() -> None:
         crew_size=6,
         power_level=85.5,
         oxygen_level=92.3,
-        last_maintenance="2024-01-15T08:30:00",
+        last_maintenance=datetime(2024, 1, 15, 8, 30, 0),
         is_operational=True,
         notes="All systems nominal.",
     )
@@ -51,11 +52,11 @@ def main() -> None:
             crew_size=99,  # Invalid: exceeds maximum of 20
             power_level=50.0,
             oxygen_level=80.0,
-            last_maintenance="2024-01-15T08:30:00",
+            last_maintenance=datetime(2024, 1, 15, 8, 30, 0),
         )
-    except ValidationError as Error:
-        for Error in Error.errors():
-            print(Error["msg"])
+    except ValidationError as exc:
+        for error in exc.errors():
+            print(error["msg"])
 
 
 if __name__ == "__main__":
