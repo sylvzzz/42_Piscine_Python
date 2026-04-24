@@ -66,5 +66,6 @@ if __name__ == "__main__":
     print("\nTesting memory vault...")
     vault = memory_vault()
     vault["store"]("secret", 42)
+    print("Store 'secret' = 42")
     print(f"Recall 'secret': {vault['recall']('secret')}")
     print(f"Recall 'unknown': {vault['recall']('unknown')}")

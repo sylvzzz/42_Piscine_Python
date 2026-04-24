@@ -35,9 +35,11 @@ def retry_spell(max_attempts: int) -> Callable:
                     return func(*args, **kwargs)
                 except Exception:
                     if attempt < max_attempts:
-                        print(f"Spell failed, retrying... (attempt {attempt}/{max_attempts})")
+                        print(f"Spell failed, retrying... "
+                              f"(attempt {attempt}/{max_attempts})")
                     else:
-                        print(f"Spell failed, retrying... (attempt {attempt}/{max_attempts})")
+                        print(f"Spell failed, retrying... "
+                              f"(attempt {attempt}/{max_attempts})")
             return f"Spell casting failed after {max_attempts} attempts"
         return wrapper
     return decorator
@@ -55,6 +57,7 @@ class MageGuild:
 
 if __name__ == "__main__":
     print("Testing spell timer...")
+
     @spell_timer
     def fireball():
         time.sleep(0.1)
@@ -62,6 +65,7 @@ if __name__ == "__main__":
     print(f"Result: {fireball()}\n")
 
     print("Testing retrying spell...")
+
     @retry_spell(3)
     def failing_spell():
         raise RuntimeError("Spell failed!")
@@ -70,6 +74,7 @@ if __name__ == "__main__":
 
     print("Testing retrying success...")
     attempt_count = 0
+
     @retry_spell(3)
     def eventually_success():
         global attempt_count
