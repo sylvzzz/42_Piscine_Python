@@ -73,15 +73,20 @@ if __name__ == "__main__":
     print(f"{result}\n")
 
     print("Testing retrying success...")
-    attempt_count = 0
 
-    @retry_spell(3)
-    def eventually_success():
-        global attempt_count
-        attempt_count += 1
-        if attempt_count < 3:
-            raise RuntimeError("Not yet!")
-        return "Waaaaaaagh spelled !"
+    def make_eventually_success():
+        count = 0
+
+        @retry_spell(3)
+        def eventually_success() -> str:
+            nonlocal count
+            count += 1
+            if count < 3:
+                raise RuntimeError("Not yet!")
+            return "Waaaaaaagh spelled !"
+        return eventually_success
+
+    eventually_success = make_eventually_success()
     print(eventually_success())
 
     print("\nTesting MageGuild...")
